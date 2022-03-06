@@ -15,10 +15,7 @@ class MyDocument extends Document {
             rel="stylesheet"
           />
           <link rel="icon" href="/logo.webp" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
-            rel="stylesheet"
-          />
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet " />
         </Head>
         <body>
           <Main />

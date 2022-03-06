@@ -1,74 +1,127 @@
-import Head from "next/head";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Spinner from "../components/spinner";
-import styles from "../styles/Home.module.css";
-import GlobalSpinnerContext from "../context/globalSpinnerContext";
 import { SpinnerProvider } from "../context/globalSpinnerContext";
 import BooksCard from "../components/booksCard";
+import Layout from "../components/Layout";
+import HousesCard from "../components/Houses";
+import CharactersCard from "../components/Character";
+import Pagination from "../components/pagination";
+import { PaginationContext } from "../context/paginationContext";
 
 export default function Home() {
   const [data, setData] = useState([]);
-  const [sortValue, setSortValue] = useState("Books");
+  const [dropdownValue, setDropdownValue] = useState("books");
+  const { globalSpinner, setGlobalSpinner } = useContext(SpinnerProvider);
+  const [paginationPages, setPaginationPages, currentPage, setCurrentPage] =
+    useContext(PaginationContext);
+  const booksPages = 1;
+  const characterPages = 178;
+  const housesPages = 37;
 
-  const fetchData = async (sorter) => {
-    const characterResult = await fetch(
-      `https://www.anapioficeandfire.com/api/${sorter}`
-    );
-    const res = await characterResult.json();
-    console.log(res);
-    setData(res);
+  const setPagPages = (dropdownValue) => {
+    if (dropdownValue === "books") {
+      let tempArr = [];
+      for (let i = 1; i <= booksPages; i++) {
+        tempArr.push(i);
+      }
+      console.log("the tempArr is: ",tempArr);
+      setPaginationPages(tempArr);
+    } else if (dropdownValue === "characters") {
+      let tempArr = [];
+      for (let i = 1; i <= characterPages; i++) {
+        tempArr.push(i);
+      }
+      console.log("the tempArr is: ",tempArr);
+      setPaginationPages(tempArr);
+    } else if (dropdownValue === "houses") {
+      let tempArr = [];
+      for (let i = 1; i <= housesPages; i++) {
+        tempArr.push(i);
+      }
+      console.log("the tempArr is: ",tempArr);
+      setPaginationPages(tempArr);
+    }
   };
 
-  useEffect(() => {
-    fetchData(sortValue);
-  }, [sortValue]);
+  function ValueType({ value, data }) {
+    if (value === "books") {
+      return data.map((el) => {
+        return <BooksCard key={el.url} data={el} />;
+      });
+    } else if (value === "houses") {
+      // setPaginationPages(tempArr);
+      return data.map((el) => {
+        return <HousesCard key={el.url} data={el} />;
+      });
+    } else if (value === "characters") {
+      return data.map((el) => {
+        return <CharactersCard key={el.url} data={el} />;
+      });
+    }
+  }
 
-  return data ? (
-    <>
+  useEffect(() => {
+    const fetchData = async (dropdownValue, currentPage) => {
+      console.log(dropdownValue);
+      setGlobalSpinner(true);
+      // setPagPages(dropdownValue);
+      try {
+        const characterResult = await fetch(
+          `https://www.anapioficeandfire.com/api/${dropdownValue}?page=${currentPage}&pageSize=12`
+        );
+        const res = await characterResult.json();
+        console.log("the res from the fetch is: " ,res);
+        setData(res);
+        // console.log(data);
+        setGlobalSpinner(false);
+      } catch (err) {
+        if (err) {
+          console.log("err msg:", err);
+        }
+
+        console.log("err!!");
+      }
+    };
+
+    fetchData(dropdownValue, currentPage);
+  }, [dropdownValue, setData, setGlobalSpinner, currentPage]);
+
+  return (
+    <div className="">
       <div className="grid place-content-center ">
-        <h1 className="text-3xl font-bold font-sans ">
-          A Tale of Ice and Fire
+        <h1 className="text-3xl font-bold font-sans text-[gradient-to-r from-pink-300 via-purple-300 to-indigo-400]">
+          A TALE OF ICE AND FIRE
         </h1>
       </div>
 
-      <div className="grid place-content-center pt-10">
+      <div className="grid place-content-center py-10">
         <select
           name="Sort Elements"
           id="sortVal"
-          className="h-10 w-40 border-2 border-black rounded-md"
-          value={sortValue}
+          className="font-bold h-10 w-40 border-2 border-black rounded-md"
+          value={dropdownValue}
           onChange={(e) => {
-            setSortValue(e.target.value);
-            console.log(e.target.value);
+            console.table(dropdownValue, e.target.value);
+            setDropdownValue(() => e.target.value);
+            console.table(dropdownValue, e.target.value);
+            setPagPages(e.target.value);
           }}
         >
-          <option value="Books">Books</option>
+          <option value="books">Books</option>
           <option value="characters">Characters</option>
-          <option value="Houses">Houses</option>
+          <option value="houses">Houses</option>
         </select>
       </div>
 
-      <div>
-        {
-          (data.length === 0) ? (
-            <Spinner />
-          ) : (
-          
-            data.map(el=>{ 
-              return ( 
-                <BooksCard key={el.name} props={el} />
-              )
-            })
-          
-  
-          )
-
-        }
-      </div>
-    </>
-  ) : (
-    <Spinner divWidth="full" divHeight="screen" svgWidth={8} svgHeight={8} />
-    // <Spinner />
+      <main>
+        <Spinner />
+      </main>
+      <Layout>{<ValueType value={dropdownValue} data={data} />}</Layout>
+      <Pagination
+        totalPages={paginationPages}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
+    </div>
   );
 }
